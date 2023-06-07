@@ -1,44 +1,49 @@
 module Scheddy
 
   def self.run
-    Scheduler.new.run
+    Scheduler.new(tasks).run
   end
 
   class Scheduler
 
     def run
-      puts "[Scheddy] Starting scheduler with #{tasks.size} tasks"
+      puts "[Scheddy] Starting scheduler with #{tasks.size} #{'task'.pluralize tasks.size}"
       trap_signals!
 
       until stop?
-        next_cycle =
-          tasks.flat_map do |task|
-            task.perform(self) unless stop?
-          end.min
+        next_cycle = run_once
         wait_until next_cycle unless stop?
       end
 
-      puts '[Scheddy] Waiting for tasks to complete'
-      wait_until(45.seconds.from_now) do
-        tasks.none?(&:thread)
-      end
-      tasks.select(&:thread).each do |task|
-        $stderr.puts "[Scheddy] Killing task #{task.name}"
-        task.thread&.kill
+      running = tasks.select(&:thread).count
+      if running > 0
+        puts "[Scheddy] Waiting for #{running} tasks to complete"
+        wait_until(45.seconds.from_now) do
+          tasks.none?(&:thread)
+        end
+        tasks.select(&:thread).each do |task|
+          $stderr.puts "[Scheddy] Killing task #{task.name}"
+          task.thread&.kill
+        end
       end
 
       puts '[Scheddy] Done'
     end
 
-
-    delegate :tasks, to: :Scheddy
-
-    attr_writer :logger, :stop
-
-    def logger
-      @logger ||= Rails.logger
+    # returns Time of next cycle
+    def run_once
+      tasks.flat_map do |task|
+        task.perform(self) unless stop?
+      end.min
     end
 
+
+    attr_reader :tasks
+    def initialize(tasks)
+      @tasks = tasks
+    end
+
+    attr_writer :stop
     def stop? ; @stop ; end
 
     def stop!(sig=nil)

@@ -1,9 +1,13 @@
+require 'fugit'
+
 module Scheddy
 end
 
 %w(
   config
+  context
   engine
+  logger
   scheduler
   task
   version

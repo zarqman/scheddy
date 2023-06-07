@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     scheddy (0.1.0)
+      fugit
       rails (>= 6)
 
 GEM
@@ -78,6 +79,11 @@ GEM
     crass (1.0.6)
     date (3.3.3)
     erubi (1.12.0)
+    et-orbi (1.2.7)
+      tzinfo
+    fugit (1.8.1)
+      et-orbi (~> 1, >= 1.2.7)
+      raabro (~> 1.4)
     globalid (1.1.0)
       activesupport (>= 5.0)
     i18n (1.14.1)
@@ -117,6 +123,7 @@ GEM
       racc (~> 1.4)
     puma (6.3.0)
       nio4r (~> 2.0)
+    raabro (1.4.0)
     racc (1.6.2)
     rack (2.2.7)
     rack-test (2.1.0)
