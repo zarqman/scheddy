@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     scheddy (0.1.0)
-      fugit
+      fugit (~> 1.8)
       rails (>= 6)
 
 GEM

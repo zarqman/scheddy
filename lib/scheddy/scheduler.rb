@@ -9,6 +9,7 @@ module Scheddy
     def run
       puts "[Scheddy] Starting scheduler with #{tasks.size} #{'task'.pluralize tasks.size}"
       trap_signals!
+      cleanup_task_history
 
       until stop?
         next_cycle = run_once
@@ -37,14 +38,28 @@ module Scheddy
       end.min
     end
 
+    def stop? ; @stop ; end
+
+
+    private
 
     attr_reader :tasks
+    attr_writer :stop
+
     def initialize(tasks)
       @tasks = tasks
     end
 
-    attr_writer :stop
-    def stop? ; @stop ; end
+    def cleanup_task_history
+      known_tasks = tasks.select(&:track_runs).map(&:name)
+      return if known_tasks.empty?  # table doesn't have to exist if track_runs always disabled
+      Scheddy::TaskHistory.find_each do |r|
+        r.destroy if known_tasks.exclude? r.name
+      end
+    rescue ActiveRecord::StatementInvalid => e
+      return if e.message =~ /relation "scheddy_task_histories" does not exist/
+      raise
+    end
 
     def stop!(sig=nil)
       puts '[Scheddy] Stopping'

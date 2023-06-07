@@ -4,17 +4,27 @@ Scheddy is a batteries-included task scheduler for Rails. It is intended as a re
 
 * Flexible scheduling. Handles fixed times (Monday at 9am), intervals (every 15 minutes), and tiny intervals (every 5 seconds).
 * Tiny intervals are great for scheduling workload specific jobs (database field `next_run_at`).
+* Catch up missed tasks. Designed for environments with frequent deploys. Also useful in dev where the scheduler isn't always running.
 * Job-queue agnostic. Works great with various ActiveJob adapters and non-ActiveJob queues too.
+* Minimal dependencies. Uses your existing database; doesn't require Redis.
 * Tasks and their schedules are versioned as part of your code.
 
 
 
 ## Installation
-Add to your application's Gemfile:
+Add to your application's `Gemfile`:
 
 ```ruby
 gem "scheddy"
 ```
+
+After running `bundle install`, add the migration to your app:
+```bash
+bin/rails scheddy:install:migrations
+bin/rails db:migrate
+```
+
+FYI, if all tasks set `track_runs false`, the migration can be skipped.
 
 
 
@@ -34,6 +44,7 @@ Scheddy.config do
   task 'monday reports' do
     run_at '0 9 * * mon'  # cron syntax
     # run_at 'monday 9am' # use fugit's natural language parsing
+    # track_runs false    # defaults to true for run_at() jobs
     perform do
       ReportJob.perform_later
     end
@@ -49,6 +60,7 @@ Scheddy.config do
       #   :minute
       #   :second
       # all values default to '*' (except second, which defaults to 0)
+    # track_runs false    # defaults to true for run_when() jobs
     perform do
       AnotherReportJob.perform_later
     end
@@ -57,6 +69,7 @@ Scheddy.config do
   ## Intervals
   task 'send welcome emails' do
     run_every 30.minutes
+    # track_runs false    # when run_every is >= 15.minutes, defaults to true; else to false
     perform do
       User.where(welcome_email_at: nil).find_each(batch_size: 100) do |user|
         WelcomeMailer.welcome_email.with(user: user).deliver_later
@@ -88,11 +101,16 @@ end
 
 Fixed time tasks are comparable to cron-style scheduling. Times will be interpreted according to the Rails default TZ.
 
+By default `run_at` and `run_when` will automatically catch up missed tasks. Scheddy does this by maintaining a record of the last run. If one or more runs was missed, it will run _once_ immediately. Multiple misses will still only be run once. Set `track_runs false` to disable catch-ups.
+
+
 #### Intervals: `run_every`
 
 Intervals are similar to cron style `*/5` syntax, but one key difference is the cycle is calculated based on Scheddy's startup time.
 
 To avoid all tasks running at once, interval tasks are given an initial random delay of no more than the interval length itself. For example, a task running at 15 second intervals will be randomly delayed 0-14 seconds for first run. It will then continue running every 15 seconds.
+
+By default, tiny interval tasks (those under 15 minutes) do not track last run or perform catch-ups, but longer interval tasks (>= 15 minutes) do. This is because tiny intervals will re-run soon anyway and it reduces database activity. Set `track_runs true|false` to override.
 
 
 
@@ -163,15 +181,15 @@ end
 
 Scheddy is runnable as a rails/rake task. Depending on your ruby setup, one of the following should do:
 ```bash
-  bundle exec rails scheddy:run
   bin/rails scheddy:run
   rails scheddy:run
+  bundle exec rails scheddy:run
 ```
 
 
 ### In production
 
-Scheddy runs as its own process. It is intended to be run only once. Redundancy should be achieved through automatic restarts via `systemd`, `dockerd`, Kubernetes, or whatever supervisory system you use.
+Scheddy runs as its own process. It is intended to be run only once. Because Scheddy has the ability to catch up missed tasks, redundancy should be achieved through automatic restarts via `systemd`, `dockerd`, Kubernetes, or whatever supervisory system you use.
 
 During deployment, shutdown the old instance before starting the new one. In Kubernetes this might look like:
 ```yaml
@@ -192,7 +210,7 @@ spec:
 
 Assuming you're using `Procfile.dev` or `Procfile` for development, add:
 ```bash
-scheddy: bundle exec rails scheddy:run
+scheddy: bin/rails scheddy:run
 ```
 
 

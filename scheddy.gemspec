@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors     = ["thomas morgan"]
   spec.email       = ["tm@iprog.com"]
   spec.homepage    = "https://github.com/zarqman/scheddy"
-  spec.summary     = "Job-queue agnostic, cron-like task scheduler for Rails apps"
-  spec.description = "Scheddy is a batteries-included task scheduler for Rails. It is intended as a replacement for cron and cron-like functionality (including job queue specific schedulers). It is job-queue agnostic."
+  spec.summary     = "Job-queue agnostic, cron-like task scheduler for Rails apps, with missed task catch-ups and other features."
+  spec.description = "Scheddy is a batteries-included task scheduler for Rails. It is intended as a replacement for cron and cron-like functionality (including job queue specific schedulers). It is job-queue agnostic and can catch up missed tasks."
   spec.license     = "MIT"
 
   spec.metadata["homepage_uri"]    = spec.homepage

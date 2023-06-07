@@ -6,11 +6,11 @@ end
 %w(
   config
   context
-  engine
   logger
   scheduler
   task
   version
+  engine
 ).each do |f|
   require_relative "scheddy/#{f}"
 end

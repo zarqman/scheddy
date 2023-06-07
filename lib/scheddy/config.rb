@@ -29,25 +29,28 @@ module Scheddy
     end
 
     def task(name, &block)
+      raise ArgumentError, "Duplicate task name '#{name}'" if tasks.any?{|t| t.name == name}
       tasks.push TaskDefinition.new(name, &block).to_task
     end
 
     # shortcut syntax
-    def run_at(cron, name:, tag: nil, &task)
+    def run_at(cron, name:, tag: :auto, track: :auto, &task)
       task(name) do
         run_at     cron
-        logger_tag tag unless tag.nil?
-        perform    &task
+        logger_tag tag if tag!=:auto
+        track_runs track if track!=:auto
+        perform(&task)
       end
     end
 
     # shortcut syntax
-    def run_every(interval, name:, delay: nil, tag: nil, &task)
+    def run_every(interval, name:, delay: nil, tag: :auto, track: :auto, &task)
       task(name) do
         run_every     interval
         initial_delay delay if delay
-        logger_tag    tag unless tag.nil?
-        perform       &task
+        logger_tag    tag if tag!=:auto
+        track_runs    track if track!=:auto
+        perform(&task)
       end
     end
 
@@ -100,10 +103,14 @@ module Scheddy
       task[:tag] = tag
     end
 
+    def track_runs(bool)
+      task[:track_runs] = bool
+    end
+
 
     # private api
     def to_task
-      Task.new **as_args
+      Task.new(**as_args)
     end
 
     private
