@@ -2,16 +2,30 @@ module Scheddy
   # default task list for when running standalone
   mattr_accessor :tasks, default: []
 
+  # called from within task's execution thread; must be multi-thread safe
+  # task is allowed to be nil
+  mattr_accessor :error_handler, default: lambda {|e, task|
+    logger.error "Exception in Scheddy task '#{task&.name}': #{e.inspect}\n  #{e.backtrace.join("\n  ")}"
+    Rails.error.report(e, handled: true, severity: :error)
+  }
+
   def self.config(&block)
     Config.new(tasks, &block)
   end
 
+
   class Config
     attr_reader :tasks
+
+    delegate :logger, to: :Scheddy
 
     def initialize(tasks, &block)
       @tasks = tasks
       instance_eval(&block)
+    end
+
+    def error_handler(block1=nil, &block2)
+      Scheddy.error_handler = block1 || block2
     end
 
     def task(name, &block)
@@ -19,8 +33,7 @@ module Scheddy
     end
 
     # shortcut syntax
-    def run_at(cron, name: nil, tag: nil, &task)
-      name ||= name_from_task(task)
+    def run_at(cron, name:, tag: nil, &task)
       task(name) do
         run_at     cron
         logger_tag tag unless tag.nil?
@@ -29,8 +42,7 @@ module Scheddy
     end
 
     # shortcut syntax
-    def run_every(interval, name: nil, delay: nil, tag: nil, &task)
-      name ||= name_from_task(task)
+    def run_every(interval, name:, delay: nil, tag: nil, &task)
       task(name) do
         run_every     interval
         initial_delay delay if delay
@@ -39,15 +51,8 @@ module Scheddy
       end
     end
 
-    private
-
-    def name_from_task(task)
-      l = task.source_location.deep_dup
-      l[0].sub!("#{Rails.root}/", '')
-      l.join ':'
-    end
-
   end
+
 
   class TaskDefinition
     delegate :logger, to: :Scheddy

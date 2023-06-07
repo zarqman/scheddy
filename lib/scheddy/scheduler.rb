@@ -15,22 +15,22 @@ module Scheddy
         wait_until next_cycle unless stop?
       end
 
-      running = tasks.select(&:thread).count
+      running = tasks.select(&:running?).count
       if running > 0
         puts "[Scheddy] Waiting for #{running} tasks to complete"
         wait_until(45.seconds.from_now) do
-          tasks.none?(&:thread)
+          tasks.none?(&:running?)
         end
-        tasks.select(&:thread).each do |task|
+        tasks.select(&:running?).each do |task|
           $stderr.puts "[Scheddy] Killing task #{task.name}"
-          task.thread&.kill
+          task.kill
         end
       end
 
       puts '[Scheddy] Done'
     end
 
-    # returns Time of next cycle
+    # return : Time of next cycle
     def run_once
       tasks.flat_map do |task|
         task.perform(self) unless stop?

@@ -96,9 +96,9 @@ To avoid all tasks running at once, interval tasks are given an initial random d
 
 
 
-#### Additional notes
+### Additional notes
 
-##### Units of work
+#### Units of work
 
 Notice that all these examples delegate the actual work to an external job. This is the recommended approach, but is not strictly required.
 
@@ -107,14 +107,14 @@ In general, bite-sized bits of work are fine in Scheddy, but bigger chunks of wo
 Database transactions are valid. These can increase use of database connections from the pool. Ensure Rails is configured appropriately.
 
 
-##### Threading and execution
+#### Threading and execution
 
 Each task runs in its own thread which helps ensure all tasks perform on time. However, Scheddy is not intended as a job executor and doesn't have a robust mechanism for retrying failed jobs--that belongs to your background job queue.
 
 A given task will only ever be executed once at a time. Mostly relevant when using tiny intervals, if a prior execution is still going when the next execution is scheduled, Scheddy will skip the next execution and log an error message to that effect.
 
 
-##### Task context
+#### Task context
 
 Tasks may receive an optional context to check if they need to stop for pending shutdown or to know the deadline for completing work before the next cycle would begin.
 
@@ -134,7 +134,7 @@ end
 ```
 
 
-##### Rails reloader
+#### Rails reloader
 
 Each task's block is run inside the Rails reloader. In development mode, any classes referenced inside the block will be reloaded automatically to your latest code, just like the Rails dev-server itself.
 
@@ -201,6 +201,31 @@ scheddy: bundle exec rails scheddy:run
 Scheddy will shutdown upon receiving an `INT`, `QUIT`, or `TERM` signal.
 
 There is a default 45 second wait for tasks to complete, which should be more than enough for the tiny types of tasks at hand. Tasks may also check for when to stop work part way through. This may be useful in iterators processing large numbers of items. See Task Context above.
+
+
+### Error handling
+
+Scheddy's default error handler uses the Rails Errors API introduced in Rails 7. If your exception tracker of choice doesn't implement this API, or if using Rails 6.x, set your own error handler.
+
+Note that the default handler is responsible for exception logging, so you must perform your own logging if wanted. If the handler is set to `nil`, exceptions will be silenced.
+
+```ruby
+Scheddy.config do
+  error_handler do |exception, task|
+    # displaying task.name is the most likely use of task
+    name = "task '#{task.name}'" if task  # task might be nil
+    logger.error "Exception in Scheddy #{name}: #{e.inspect}"
+    # report the exception here
+  end
+
+  error_handler ->(exception){
+    # passing a proc instead of a block is also allowed
+    # the task arg can be left out if it won't be used
+  }
+
+  error_handler nil  # silence & don't report
+end
+```
 
 
 
