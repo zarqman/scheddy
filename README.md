@@ -179,11 +179,18 @@ end
 
 ## Running Scheddy
 
-Scheddy is runnable as a rails/rake task. Depending on your ruby setup, one of the following should do:
+Depending on your ruby setup, one of the following should do:
 ```bash
-  bin/rails scheddy:run
-  rails scheddy:run
-  bundle exec rails scheddy:run
+  scheddy start
+  # OR
+  bundle exec scheddy start
+```
+
+You can also check your tasks configuration with:
+```bash
+  scheddy tasks
+  # OR
+  bundle exec scheddy tasks
 ```
 
 
@@ -210,7 +217,7 @@ spec:
 
 Assuming you're using `Procfile.dev` or `Procfile` for development, add:
 ```bash
-scheddy: bin/rails scheddy:run
+scheddy: bundle exec scheddy start
 ```
 
 

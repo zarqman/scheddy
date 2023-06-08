@@ -44,6 +44,31 @@ module Scheddy
     end
 
 
+    def to_h
+      attrs = {
+        name:       name,
+        next_cycle: next_cycle.utc,
+        type:       type,
+        tag:        tag,
+        task:       task,
+        track_runs: track_runs,
+      }
+      case type
+      when :interval
+        attrs[:initial_delay] = ActiveSupport::Duration.build(delay) unless track_runs
+        attrs[:interval] = ActiveSupport::Duration.build(interval)
+      when :cron
+        attrs[:cron] = cron.original
+      end
+      attrs.to_a.sort_by!{_1.to_s}.to_h
+    end
+
+    def inspect
+      attrs = to_h.map{|k,v| "#{k}: #{v.inspect}"}
+      %Q{#<#{self.class} #{attrs.join(', ')}>}
+    end
+
+
     private
 
     attr_accessor :thread

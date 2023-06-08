@@ -16,9 +16,12 @@ Gem::Specification.new do |spec|
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
     Dir["{app,config,db,lib}/**/*", "LICENSE.txt", "Rakefile", "README.md"]
   end
+  spec.bindir      = 'exe'
+  spec.executables = ['scheddy']
 
   spec.required_ruby_version = '>= 2.7'
 
   spec.add_dependency 'fugit', '~> 1.8'
   spec.add_dependency 'rails', '>= 6'
+  spec.add_dependency 'thor', '~> 1.0'
 end
