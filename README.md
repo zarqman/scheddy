@@ -6,7 +6,7 @@ Scheddy is a batteries-included task scheduler for Rails. It is intended as a re
 * Tiny intervals are great for scheduling workload specific jobs (database field `next_run_at`).
 * Catch up missed tasks. Designed for environments with frequent deploys. Also useful in dev where the scheduler isn't always running.
 * Job-queue agnostic. Works great with various ActiveJob adapters and non-ActiveJob queues too.
-* Minimal dependencies. Uses your existing database; doesn't require Redis.
+* Minimal dependencies. Uses your existing database (or no database at all). Redis not required either.
 * Tasks and their schedules are versioned as part of your code.
 
 
@@ -72,7 +72,7 @@ Scheddy.config do
     # track_runs false    # when run_every is >= 15.minutes, defaults to true; else to false
     perform do
       User.where(welcome_email_at: nil).find_each(batch_size: 100) do |user|
-        WelcomeMailer.welcome_email.with(user: user).deliver_later
+        WelcomeMailer.with(user: user).welcome_email.deliver_later
       end
     end
   end

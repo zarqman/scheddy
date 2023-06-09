@@ -38,6 +38,12 @@ module Scheddy
     end
 
 
+    desc :version, 'Show version'
+    def version
+      puts "Scheddy v#{Scheddy::VERSION}"
+    end
+
+
     no_commands do
 
       def load_app!

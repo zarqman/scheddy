@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    scheddy (0.1.0)
+    scheddy (0.2.0)
       fugit (~> 1.8)
       rails (>= 6)
       thor (~> 1.0)

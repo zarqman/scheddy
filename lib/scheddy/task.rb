@@ -55,7 +55,7 @@ module Scheddy
       }
       case type
       when :interval
-        attrs[:initial_delay] = ActiveSupport::Duration.build(delay) unless track_runs
+        attrs[:initial_delay] = ActiveSupport::Duration.build(delay) unless track_runs && last_run
         attrs[:interval] = ActiveSupport::Duration.build(interval)
       when :cron
         attrs[:cron] = cron.original
