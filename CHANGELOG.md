@@ -1,3 +1,7 @@
+#### 0.2.1
+
+- Handle ActiveRecord not present
+
 #### 0.2.0
 
 - CLI: add 'scheddy version'; improve 'scheddy tasks'
