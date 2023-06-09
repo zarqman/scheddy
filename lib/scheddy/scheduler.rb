@@ -19,7 +19,7 @@ module Scheddy
       running = tasks.select(&:running?).count
       if running > 0
         puts "[Scheddy] Waiting for #{running} tasks to complete"
-        wait_until(45.seconds.from_now) do
+        wait_until(45.seconds.from_now, skip_stop: true) do
           tasks.none?(&:running?)
         end
         tasks.select(&:running?).each do |task|
@@ -73,9 +73,9 @@ module Scheddy
     end
 
     # &block - optional block - return truthy to end prematurely
-    def wait_until(time)
+    def wait_until(time, skip_stop: false)
       while (now = Time.current) < time
-        return if stop?
+        return if stop? && !skip_stop
         return if block_given? && yield
         sleep [time-now, 1].min
       end
