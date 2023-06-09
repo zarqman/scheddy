@@ -136,7 +136,7 @@ A given task will only ever be executed once at a time. Mostly relevant when usi
 
 Tasks may receive an optional context to check if they need to stop for pending shutdown or to know the deadline for completing work before the next cycle would begin.
 
-Deadlines (`finish_before`) are mostly useful if there is occasionally a large block of work combined with tiny intervals. The deadline is calculated with a near 2 second buffer. Only if that's inadequate do you need to adjust further. As already mentioned, Scheddy is smart enough to skip the next cycle if the prior cycle is still running, so handling deadlines is entirely optional.
+Deadlines (`finish_before`) are mostly useful if there is occasionally a large block of work combined with tiny intervals. It may be necessary to calculate your own buffer when comparing against `finish_before` (1 second is shown below). As already mentioned, Scheddy is smart enough to skip the next cycle if the prior cycle is still running, so handling deadlines is entirely optional.
 
 ```ruby
 task 'iterating task' do
@@ -145,7 +145,7 @@ task 'iterating task' do
     Model.where(...).find_each do |model|
       SomeJob.perform_later model.id if model.run_job?
       break if context.stop? # the scheduler has requested to shutdown
-      break if context.finish_before < Time.now # the next cycle is imminent
+      break if context.finish_before < 1.second.from_now # the next cycle is imminent
     end
   end
 end

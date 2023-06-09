@@ -1,9 +1,9 @@
 module Scheddy
   class Context
 
-    def initialize(scheduler, finish_before)
+    def initialize(scheduler, task)
       @scheduler = scheduler
-      @finish_before = finish_before
+      @finish_before = task.finish_before
     end
 
     delegate :stop?, to: :@scheduler

@@ -12,12 +12,16 @@ module Scheddy
         logger.error "Scheddy task '#{name}' already running; skipping this cycle"
         return next_cycle!
       end
-      context = Context.new(scheduler, finish_before)
+      context = Context.new(scheduler, self)
       self.thread =
         Thread.new do
           logger.tagged tag do
             Rails.application.reloader.wrap do
-              task.call(*[context].take(task.arity.abs))
+              if context.finish_before < Time.current
+                logger.info "Rails dev-mode reloader locked for entire task interval; skipping this run"
+              else
+                task.call(*[context].take(task.arity.abs))
+              end
             rescue Exception => e
               if h = Scheddy.error_handler
                 h.call(*[e, self].take(h.arity.abs))
@@ -28,6 +32,12 @@ module Scheddy
           self.thread = nil
         end
       next_cycle!
+    rescue Exception => e
+      logger.error "Scheddy: error scheduling task '#{name}'; retrying in 5 seconds"
+      if h = Scheddy.error_handler
+        h.call(*[e, self].take(h.arity.abs))
+      end
+      return self.next_cycle = 5.seconds.from_now
     end
 
     def kill
@@ -129,14 +139,15 @@ module Scheddy
         end
     end
 
-    def finish_before
+    def finish_before(grace: 0.1.seconds)
       case type
       when :interval
-        Time.current + interval - 2.seconds
+        Time.current + interval - grace
       when :cron
-        cron.next_time.to_utc_time - 2.seconds
+        cron.next_time.to_utc_time - grace
       end
     end
+    public :finish_before
 
 
     def last_run
