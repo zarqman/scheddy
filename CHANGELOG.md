@@ -1,3 +1,7 @@
+#### 0.2.2
+
+- Recover from lost DB connections in main thread
+
 #### 0.2.1
 
 - Handle ActiveRecord not present

@@ -169,6 +169,12 @@ module Scheddy
 
     def record_this_run
       return unless track_runs
+      begin
+        Scheddy::TaskHistory.connection.verify!
+      rescue => e
+        logger.error "Database offline while updating task history for Scheddy task '#{name}': #{e.inspect}"
+        return
+      end
       Scheddy::TaskHistory.logger.silence(Logger::INFO) do
         task_history.update last_run_at: Time.current
       end
