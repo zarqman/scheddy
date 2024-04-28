@@ -33,7 +33,11 @@ module Scheddy
 
     # return : Time of next cycle
     def run_once
-      tasks.flat_map do |task|
+      if tasks.empty?
+        $stderr.puts '[Scheddy] No tasks found; doing nothing'
+        return 1.hour.from_now
+      end
+      tasks.filter_map do |task|
         task.perform(self) unless stop?
       end.min
     end
