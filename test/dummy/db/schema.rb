@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_06_07_201527) do
+ActiveRecord::Schema[7.2].define(version: 2024_08_22_165904) do
   create_table "scheddy_task_histories", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "last_run_at", precision: nil
@@ -19,4 +19,15 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_07_201527) do
     t.index ["name"], name: "index_scheddy_task_histories_on_name", unique: true
   end
 
+  create_table "scheddy_task_schedulers", id: :string, force: :cascade do |t|
+    t.string "hostname", null: false
+    t.datetime "last_seen_at", precision: nil, null: false
+    t.datetime "leader_expires_at", precision: nil
+    t.string "leader_state"
+    t.integer "lock_version", default: 0, null: false
+    t.integer "pid", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["leader_state"], name: "index_scheddy_task_schedulers_on_leader_state", unique: true
+  end
 end

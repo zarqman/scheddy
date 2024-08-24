@@ -1,5 +1,6 @@
 #### 0.3.0
 
+- Add native clustering support
 - Rework logging
 - Tidy up error handling
 

@@ -49,6 +49,11 @@ module Scheddy
       @next_cycle
     end
 
+    def reset
+      self.next_cycle = :initial
+      @task_history = nil
+    end
+
 
     def to_h
       attrs = {

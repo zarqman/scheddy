@@ -17,6 +17,14 @@ module Scheddy
     end
 
 
+    desc :stepdown, 'Ask current Scheddy leader to step down'
+    def stepdown
+      load_app!
+      puts 'Requesting step down...'
+      Scheddy::TaskScheduler.leader.first&.request_stepdown
+    end
+
+
     desc :tasks, 'Show configured tasks'
     def tasks
       load_app!
