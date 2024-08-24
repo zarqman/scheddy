@@ -37,7 +37,7 @@ module Scheddy
       running = tasks.select(&:running?).count
       if running > 0
         puts "[scheddy] Waiting for #{running} tasks to complete"
-        wait_until(45.seconds.from_now, skip_stop: true) do
+        wait_for(45.seconds, skip_stop: true) do
           tasks.none?(&:running?)
         end
         tasks.select(&:running?).each do |task|
@@ -96,14 +96,12 @@ module Scheddy
     def cleanup_task_history
       return if @cleaned_tasks
       @cleaned_tasks = true
-      known_tasks = tasks.select(&:track_runs).map(&:name)
-      return if known_tasks.empty?  # table doesn't have to exist if track_runs always disabled
-      Scheddy::TaskHistory.find_each do |r|
-        r.destroy if known_tasks.exclude? r.name
+      return unless Scheddy::TaskHistory.table_exists?
+      trackable_tasks = tasks.select(&:track_runs).map(&:name)
+      return if trackable_tasks.empty?
+      Scheddy::TaskHistory.where(updated_at: ..1.day.ago).where.not(name: trackable_tasks).find_each do |r|
+        r.destroy
       end
-    rescue ActiveRecord::StatementInvalid => e
-      return if e.message =~ /relation "scheddy_task_histories" does not exist/
-      raise
     end
 
     def cleanup_task_scheduler

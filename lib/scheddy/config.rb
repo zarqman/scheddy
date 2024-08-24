@@ -30,8 +30,8 @@ module Scheddy
     def run_at(cron, name:, tag: :auto, track: :auto, &task)
       task(name) do
         run_at     cron
-        logger_tag tag if tag!=:auto
-        track_runs track if track!=:auto
+        logger_tag tag if tag != :auto
+        track_runs track if track != :auto
         perform(&task)
       end
     end
@@ -41,8 +41,8 @@ module Scheddy
       task(name) do
         run_every     interval
         initial_delay delay if delay
-        logger_tag    tag if tag!=:auto
-        track_runs    track if track!=:auto
+        logger_tag    tag if tag != :auto
+        track_runs    track if track != :auto
         perform(&task)
       end
     end
