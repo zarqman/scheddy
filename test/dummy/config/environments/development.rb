@@ -60,4 +60,13 @@ Rails.application.configure do
 
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
+
+
+  config.log_formatter = ::Logger::Formatter.new
+
+  STDOUT.sync = true
+  # Log to STDOUT by default
+  config.logger = ActiveSupport::Logger.new(STDOUT)
+    .tap  { |logger| logger.formatter = config.log_formatter }
+    .then { |logger| ActiveSupport::TaggedLogging.new(logger) }
 end

@@ -1,5 +1,6 @@
 #### 0.3.0
 
+- Rework logging
 - Tidy up error handling
 
 #### 0.2.2

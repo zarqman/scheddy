@@ -7,8 +7,10 @@ module Scheddy
   class Scheduler
 
     def run
-      puts "[Scheddy] Starting scheduler with #{tasks.size} #{'task'.pluralize tasks.size}"
+      puts "[scheddy] Hello. This is Scheddy v#{VERSION}."
+      puts "[scheddy] hostname=#{hostname}, pid=#{pid}, id=#{scheduler_id}"
       trap_signals!
+      puts "[scheddy] Starting scheduler with #{tasks.size} #{'task'.pluralize tasks.size}"
       cleanup_task_history
 
       until stop?
@@ -18,23 +20,23 @@ module Scheddy
 
       running = tasks.select(&:running?).count
       if running > 0
-        puts "[Scheddy] Waiting for #{running} tasks to complete"
+        puts "[scheddy] Waiting for #{running} tasks to complete"
         wait_until(45.seconds.from_now, skip_stop: true) do
           tasks.none?(&:running?)
         end
         tasks.select(&:running?).each do |task|
-          $stderr.puts "[Scheddy] Killing task #{task.name}"
+          $stderr.puts "[scheddy] Killing task #{task.name}"
           task.kill
         end
       end
 
-      puts '[Scheddy] Done'
+      puts '[scheddy] Goodbye'
     end
 
     # return : Time of next cycle
     def run_once
       if tasks.empty?
-        $stderr.puts '[Scheddy] No tasks found; doing nothing'
+        logger.warn 'No tasks found; doing nothing'
         return 1.hour.from_now
       end
       tasks.filter_map do |task|
@@ -43,6 +45,22 @@ module Scheddy
     end
 
     def stop? ; @stop ; end
+
+    def hostname
+      @hostname ||= Socket.gethostname.force_encoding(Encoding::UTF_8)
+    end
+
+    def pid
+      @pid ||= Process.pid
+    end
+
+    def scheduler_id
+      @scheduler_id ||= SecureRandom.alphanumeric 12
+    end
+
+    def logger
+      @logger ||= Scheddy.logger.tagged "scheddy-#{scheduler_id}"
+    end
 
 
     private
@@ -66,12 +84,12 @@ module Scheddy
     end
 
     def stop!(sig=nil)
-      puts '[Scheddy] Stopping'
+      puts '[scheddy] Stopping'
       self.stop = true
     end
 
     def trap_signals!
-      trap 'INT', &method(:stop!)
+      trap 'INT',  &method(:stop!)
       trap 'QUIT', &method(:stop!)
       trap 'TERM', &method(:stop!)
     end
