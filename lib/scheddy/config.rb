@@ -2,13 +2,6 @@ module Scheddy
   # default task list for when running standalone
   mattr_accessor :tasks, default: []
 
-  # called from within task's execution thread; must be multi-thread safe
-  # task is allowed to be nil
-  mattr_accessor :error_handler, default: lambda {|e, task|
-    logger.error "Exception in Scheddy task '#{task&.name}': #{e.inspect}\n  #{e.backtrace.join("\n  ")}"
-    Rails.error.report(e, handled: true, severity: :error)
-  }
-
   def self.config(&block)
     Config.new(tasks, &block)
   end

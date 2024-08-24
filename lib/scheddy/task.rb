@@ -23,9 +23,7 @@ module Scheddy
                 task.call(*[context].take(task.arity.abs))
               end
             rescue Exception => e
-              if h = Scheddy.error_handler
-                h.call(*[e, self].take(h.arity.abs))
-              end
+              Scheddy.handle_error(e, self)
             end
           end
         ensure
@@ -34,9 +32,7 @@ module Scheddy
       next_cycle!
     rescue Exception => e
       logger.error "Scheddy: error scheduling task '#{name}'; retrying in 5 seconds"
-      if h = Scheddy.error_handler
-        h.call(*[e, self].take(h.arity.abs))
-      end
+      Scheddy.handle_error(e, self)
       return self.next_cycle = 5.seconds.from_now
     end
 

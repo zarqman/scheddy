@@ -1,3 +1,7 @@
+#### 0.3.0
+
+- Tidy up error handling
+
 #### 0.2.2
 
 - Recover from lost DB connections in main thread

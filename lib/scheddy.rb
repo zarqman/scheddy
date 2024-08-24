@@ -6,6 +6,7 @@ end
 %w(
   config
   context
+  error_handler
   logger
   scheduler
   task
