@@ -7,6 +7,7 @@ Scheddy is a batteries-included task scheduler for Rails. It is intended as a re
 * Catch up missed tasks. Designed for environments with frequent deploys. Also useful in dev where the scheduler isn't always running.
 * Job-queue agnostic. Works great with various ActiveJob adapters and non-ActiveJob queues too.
 * Minimal dependencies. Uses your existing database (or no database at all). Redis not required either.
+* Built-in cluster support by running 2+ Scheddy instances. (Database required in this case.)
 * Tasks and their schedules are versioned as part of your code.
 
 
@@ -18,13 +19,13 @@ Add to your application's `Gemfile`:
 gem "scheddy"
 ```
 
-After running `bundle install`, add the migration to your app:
+After running `bundle install`, add the migrations to your app:
 ```bash
 bin/rails scheddy:install:migrations
 bin/rails db:migrate
 ```
 
-FYI, if all tasks set `track_runs false`, the migration can be skipped.
+FYI, if all tasks set `track_runs false` and running only a single Scheddy instance, the migrations are optional.
 
 
 
@@ -129,7 +130,16 @@ Database transactions are valid. These can increase use of database connections 
 
 Each task runs in its own thread which helps ensure all tasks perform on time. However, Scheddy is not intended as a job executor and doesn't have a robust mechanism for retrying failed jobs--that belongs to your background job queue.
 
-A given task will only ever be executed once at a time. Mostly relevant when using tiny intervals, if a prior execution is still going when the next execution is scheduled, Scheddy will skip the next execution and log an error message to that effect.
+A given task will only ever be executed once at a time. Mostly relevant when using tiny intervals, if a prior execution is still going when the next execution is scheduled to start, Scheddy will skip the next execution and log an error message to that effect.
+
+
+#### Running 2+ Scheddy instances in a cluster
+
+Running multiple Scheddy instances will automatically form a cluster with one leader and however many standbys. Tasks are only executed by the leader.
+
+Clean and unclean handoffs are both supported, taking 1-2 and 4-5 minutes respectively. After a handoff, task executions will be caught up by the new leader, same as if a single instance had been stopped and restarted.
+
+Note that the prior section's promise that a task will only be executed once at a time cannot be guaranteed in the case of a handoff between Scheddy instances. Since tasks are intended to run very quickly, and long tasks should run via ActiveJob instead, this should not be an issue in practice.
 
 
 #### Task context
@@ -193,24 +203,21 @@ You can also check your tasks configuration with:
   bundle exec scheddy tasks
 ```
 
+When running 2+ Scheddy's, a handoff may be initiated with:
+```bash
+  scheddy stepdown
+  # OR
+  bundle exec scheddy stepdown
+```
+
 
 ### In production
 
-Scheddy runs as its own process. It is intended to be run only once. Because Scheddy has the ability to catch up missed tasks, redundancy should be achieved through automatic restarts via `systemd`, `dockerd`, Kubernetes, or whatever supervisory system you use.
+Scheddy runs as its own process. During app deployments, it is recommended to shutdown the old Scheddy instance before starting the new one.
 
-During deployment, shutdown the old instance before starting the new one. In Kubernetes this might look like:
-```yaml
-kind: Deployment
-spec:
-  replicas: 1
-  strategy:
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
-  template:
-    spec:
-      terminationGracePeriodSeconds: 60
-```
+Since Scheddy has the ability to catch up missed tasks, it is often viable to run just a single Scheddy instance, especially when that instance is automatically restarted by `systemd`, `dockerd`, Kubernetes, or whatever supervisory system you use.
+
+It is also possible to run 2+ Scheddy instances as a cluster. One instance will be selected as the leader and execute tasks. The other instance(s) will operate as standbys, ready to take over if the leader steps down or fails.
 
 
 ### In development (and `Procfile` in production)
