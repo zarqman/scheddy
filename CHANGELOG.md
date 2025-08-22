@@ -1,3 +1,7 @@
+#### 0.4.0
+
+- Minimum Rails is now 7.x
+
 #### 0.3.0
 
 - Add native clustering support

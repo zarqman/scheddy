@@ -261,10 +261,6 @@ end
 
 
 
-## Compatibility
-Used in production on Rails 7.0+. Gemspec is set to Rails 6.0+, but such is not well tested.
-
-
 ## Contributing
 Pull requests are welcomed.
 

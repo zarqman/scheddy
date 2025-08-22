@@ -1,8 +1,5 @@
 require 'fugit'
 
-module Scheddy
-end
-
 %w(
   config
   context
@@ -14,4 +11,12 @@ end
   engine
 ).each do |f|
   require_relative "scheddy/#{f}"
+end
+
+module Scheddy
+
+  def self.run
+    Scheduler.new(tasks).run
+  end
+
 end

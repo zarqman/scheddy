@@ -3,10 +3,6 @@ module Scheddy
   LEASE_DURATION         = 4.minutes
     # must be > 2x the renewal interval
 
-  def self.run
-    Scheduler.new(tasks).run
-  end
-
   class Scheduler
 
     def run
@@ -135,12 +131,14 @@ module Scheddy
     def stepdown!(sig=nil)
       if scheduler_record&.leader?
         puts '[scheddy] Requesting step down'
+          # trap handlers cannot use Logger
         self.stepdown = true
       end
     end
 
     def stop!(sig=nil)
       puts '[scheddy] Stopping'
+        # trap handlers cannot use Logger
       self.stop = true
     end
 
