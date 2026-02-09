@@ -1,3 +1,9 @@
+#### 0.4.1
+
+- Update migrations to 7.0
+  This causes the datetime columns to honor non-default values for
+  `ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.datetime_type`.
+
 #### 0.4.0
 
 - Minimum Rails is now 7.x
