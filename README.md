@@ -6,7 +6,7 @@ Scheddy is a batteries-included task scheduler for Rails. It is intended as a re
 * Tiny intervals are great for scheduling workload specific jobs (database field `next_run_at`).
 * Catch up missed tasks. Designed for environments with frequent deploys. Also useful in dev where the scheduler isn't always running.
 * Job-queue agnostic. Works great with various ActiveJob adapters and non-ActiveJob queues too.
-* Minimal dependencies. Uses your existing database (or no database at all). Redis not required either.
+* Minimal dependencies. Uses your existing database (or no database at all). Redis/Valkey not required either.
 * Built-in cluster support by running 2+ Scheddy instances. (Database required in this case.)
 * Tasks and their schedules are versioned as part of your code.
 
@@ -128,7 +128,7 @@ Database transactions are valid. These can increase use of database connections 
 
 #### Threading and execution
 
-Each task runs in its own thread which helps ensure all tasks perform on time. However, Scheddy is not intended as a job executor and doesn't have a robust mechanism for retrying failed jobs--that belongs to your background job queue.
+Each task is executed in its own thread which helps ensure all tasks perform on time. However, Scheddy is not intended as a job executor and doesn't have a robust mechanism for retrying failed jobs--that belongs to your background job queue.
 
 A given task will only ever be executed once at a time. Mostly relevant when using tiny intervals, if a prior execution is still going when the next execution is scheduled to start, Scheddy will skip the next execution and log an error message to that effect.
 
@@ -237,7 +237,7 @@ There is a default 45 second wait for tasks to complete, which should be more th
 
 ### Error handling
 
-Scheddy's default error handler uses the Rails Errors API introduced in Rails 7. If your exception tracker of choice doesn't implement this API, or if using Rails 6.x, set your own error handler.
+Scheddy's default error handler uses the Rails Errors API introduced in Rails 7. If your exception tracker of choice doesn't implement this API, set your own error handler.
 
 Note that the default handler is responsible for exception logging, so you must perform your own logging if wanted. If the handler is set to `nil`, exceptions will be silenced.
 
