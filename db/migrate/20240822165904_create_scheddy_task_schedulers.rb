@@ -1,6 +1,6 @@
 class CreateScheddyTaskSchedulers < ActiveRecord::Migration[7.0]
   def change
-    create_table :scheddy_task_schedulers do |t|
+    create_table :scheddy_task_schedulers, id: :string do |t|
       t.string     :hostname,          null: false
       t.datetime   :last_seen_at,      null: false
       t.datetime   :leader_expires_at
